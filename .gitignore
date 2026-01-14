@@ -1,0 +1,36 @@
+# Secrets / env
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# Local artifacts / downloads
+docs/
+docs_txt/
+docs_txt_clean/
+artifacts/
+sec_data/
+sec_txt/
+sec_txt_clean/
+chunks/
+embeddings/
+vector_db/
+market_data/
+market_data_clean/
+yahoo_finance_txt/
+yahoo_finance_txt_clean/
+
+# VS Code
+.vscode/
+.claude/
+
+# Personal notes and test files
+Plan.txt
+test_*.py
