@@ -1,5 +1,5 @@
 """
-01_download_filings.py
+01_download_annual.py
 wDonload latest 10-K (or whatever form in config.yaml) for each ticker and extract raw text
 — using config.yaml for ALL settings (no hardcoded constants).
 

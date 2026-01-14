@@ -1,213 +1,170 @@
-# FinancialChatbot
+# Financial Agent
 
-A complete RAG (Retrieval Augmented Generation) system for financial document analysis. This project fetches SEC 10-K filings, processes them into optimized chunks, generates embeddings, and provides an intelligent question-answering interface powered by Google Gemini.
+RAG-powered agent for querying SEC financial filings (10-K annual reports).
+
+Ask questions about company finances, risks, business models, and more - with citations from official SEC documents.
+
+## Installation
+
+```bash
+pip install financial-agent
+```
+
+## Quick Start
+
+### 1. Get a Gemini API Key (free)
+
+Get your free API key at: https://aistudio.google.com/app/apikey
+
+### 2. Set Environment Variable
+
+```bash
+export GOOGLE_API_KEY=your-api-key-here
+```
+
+### 3. Download Vector Database
+
+Download the pre-built vector database from [GitHub Releases](https://github.com/zmousavi/FinancialAgent/releases) and extract it.
+
+### 4. Use the Agent
+
+```python
+from financial_agent import FinancialAgent
+
+# Initialize with path to vector database
+agent = FinancialAgent("path/to/vector_db")
+
+# Ask a question
+result = agent.query("What are Apple's main revenue sources?")
+
+# Print the answer
+print(result["answer"])
+
+# Print citations
+for citation in result["citations"]:
+    print(f"[{citation['reference_number']}] {citation['user_friendly_format']}")
+```
 
 ## Features
 
-- **Automated SEC filing download** with rate limiting and proper headers
-- **Intelligent text cleaning** to remove viewer artifacts and extract narrative content
-- **Smart document analysis** to determine optimal chunking strategies
-- **Section-based chunking** that preserves SEC document structure
-- **Vector embeddings** using Google Vertex AI (text-embedding-005)
-- **FAISS vector database** for fast similarity search
-- **RAG query interface** with Google Gemini for intelligent Q&A
-- **Multi-company support** with balanced retrieval for comparison queries
-- **Configurable pipeline** with YAML-based settings
+- **Natural Language Queries**: Ask questions in plain English
+- **Multi-Company Support**: Query data from AAPL, MSFT, GOOGL, AMZN, TSLA, META, NFLX, NVDA, WMT
+- **Citations**: Every answer includes references to source documents
+- **Smart Retrieval**: Hybrid search combining semantic similarity and keyword matching
 
-## Project Structure
+## Example Queries
 
-```
-FinancialChatbot/
-├── 01_download_filings.py      # Download SEC 10-K filings
-├── 01a_download_annual.py      # Download annual reports specifically
-├── 02_clean_sec_data.py        # Clean SEC filing text
-├── 02_clean_yahoo_finance_data.py  # Clean Yahoo Finance market data
-├── 03_analyze_documents.py     # Analyze document structure for chunking
-├── 04_create_chunks.py         # Create text chunks for RAG
-├── 05_create_embeddings.py     # Generate vector embeddings (Vertex AI)
-├── 06_setup_vector_db.py       # Set up FAISS vector database
-├── 07_generation_system.py     # RAG pipeline with Gemini LLM
-├── chunk_utils.py              # Text chunking utilities
-├── config.yaml                 # Configuration settings
-├── requirements.txt            # Python dependencies
-├── .env.example                # Environment variable template
-├── sec_data/                   # Raw HTML filings (gitignored)
-├── sec_txt/                    # Raw text extracts (gitignored)
-├── sec_txt_clean/              # Cleaned text files (gitignored)
-├── chunks/                     # Processed chunks (gitignored)
-├── embeddings/                 # Generated embeddings (gitignored)
-└── vector_db/                  # FAISS vector database (gitignored)
+```python
+# Single company questions
+agent.query("What are Apple's main revenue sources?")
+agent.query("What risks does Tesla face?")
+
+# Comparison questions
+agent.query("Compare Apple and Microsoft's business models")
+
+# Specific topics
+agent.query("What does Amazon say about competition?")
 ```
 
-## Setup
+## Response Format
+
+```python
+result = agent.query("What are Apple's revenues?")
+
+# result contains:
+{
+    "query": "What are Apple's revenues?",
+    "answer": "According to Apple's 2023 annual report...",
+    "citations": [...],
+    "retrieved_chunks": 5,
+    "model_used": "gemini-2.0-flash-exp",
+    "timestamp": "2024-01-15T10:30:00"
+}
+```
+
+## Requirements
+
+- Python 3.9+
+- Google Gemini API key (free tier available)
+- Pre-built vector database (download from releases)
+
+---
+
+# Building Your Own Vector Database (Advanced)
+
+If you want to build your own vector database with fresh data or different companies, follow these instructions.
+
+## Pipeline Setup
 
 ```bash
-git clone https://github.com/yourusername/FinancialChatbot.git
-cd FinancialChatbot
+git clone https://github.com/zmousavi/FinancialAgent.git
+cd FinancialAgent
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e ".[pipeline]"
 
 # Download spaCy model
 python -m spacy download en_core_web_sm
-
-# Create environment file
-cp .env.example .env
-# Edit .env with your credentials (see Environment Variables below)
 ```
 
 ## Environment Variables
 
-Create a `.env` file with:
+Create a `.env` file:
 
 ```bash
 # SEC API (from sec-api.io)
 SEC_API_KEY=your_sec_api_key_here
 CONTACT_EMAIL=your_email@example.com
 
-# Google Cloud / Vertex AI
+# Google Cloud / Vertex AI (for embeddings)
 GCP_PROJECT_ID=your-gcp-project-id
-GOOGLE_CLOUD_LOCATION=your-google-cloud-location
+GOOGLE_CLOUD_LOCATION=us-central1
 ```
 
-**Google Cloud Setup:**
-1. Create a GCP project with Vertex AI API enabled
-2. Set up authentication: `gcloud auth application-default login`
-3. Ensure your account has Vertex AI permissions
+## Run the Pipeline
 
-## Usage
-
-### 1. Download SEC Filings
 ```bash
-python3 01_download_filings.py
-```
-Downloads 10-K filings for companies in `config.yaml` (default: AAPL, MSFT, GOOGL, AMZN, TSLA, META, NFLX, NVDA, WMT).
+# 1. Download SEC filings
+python scripts/01_download_filings.py
 
-### 2. Clean Filing Text
-```bash
-python3 02_clean_sec_data.py
-```
-Removes HTML artifacts and extracts clean narrative text.
+# 2. Clean filing text
+python scripts/02_clean_sec_data.py
 
-### 3. Analyze Document Structure
-```bash
-python3 03_analyze_documents.py
-```
-Analyzes documents to determine optimal chunking strategy.
+# 3. Analyze document structure
+python scripts/03_analyze_documents.py
 
-### 4. Create Chunks
-```bash
-python3 04_create_chunks.py
-```
-Creates section-based chunks optimized for RAG retrieval.
+# 4. Create chunks
+python scripts/04_create_chunks.py
 
-### 5. Generate Embeddings
-```bash
-python3 05_create_embeddings.py
-```
-Generates vector embeddings using Vertex AI text-embedding-005.
+# 5. Generate embeddings (requires GCP)
+python scripts/05_create_embeddings.py
 
-### 6. Set Up Vector Database
-```bash
-python3 06_setup_vector_db.py
-```
-Creates FAISS index for fast similarity search.
-
-### 7. Run RAG System
-```bash
-python3 07_generation_system.py
-```
-Tests the complete RAG pipeline with sample queries.
-
-## Example Queries
-
-```python
-from 07_generation_system import FinancialRAGSystem
-
-rag = FinancialRAGSystem('vector_db/')
-
-# Single company query
-result = rag.query("What are Apple's main revenue sources?")
-print(result['answer'])
-
-# Comparison query (automatically balances retrieval)
-result = rag.query("Compare Apple and Microsoft's business models")
-print(result['answer'])
-
-# Risk-focused query
-result = rag.query("What are the key risk factors for Tesla?")
-print(result['answer'])
+# 6. Set up vector database
+python scripts/06_setup_vector_db.py
 ```
 
-## Configuration
-
-Edit `config.yaml` to customize:
-
-```yaml
-tickers: ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NFLX", "NVDA", "WMT"]
-form_type: "10-K"
-
-embeddings:
-  provider: "vertex-ai"
-  model: "text-embedding-005"
-  batch_size: 50
-
-vertex_ai:
-  project_id_env_var: "GCP_PROJECT_ID"
-  location: "us-central1"
-  embedding_model: "text-embedding-005"
-  llm_model: "gemini-1.5-flash"
-```
-
-## Architecture
+## Project Structure
 
 ```
-User Query
-    │
-    ▼
-┌─────────────────┐
-│ Query Embedding │  (Vertex AI text-embedding-005)
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  FAISS Search   │  (Vector similarity search)
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Context Builder │  (Format retrieved chunks)
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Gemini LLM     │  (Generate response with citations)
-└────────┬────────┘
-         │
-         ▼
-    Response with Citations
+financial-agent/
+├── src/
+│   └── financial_agent/        # The pip-installable library
+│       ├── __init__.py
+│       ├── agent.py            # FinancialAgent class
+│       ├── vector_db.py        # Vector database search
+│       └── chunk_utils.py      # Text chunking utilities
+├── scripts/                    # Data pipeline scripts
+│   ├── 01_download_filings.py
+│   ├── 02_clean_sec_data.py
+│   ├── 03_analyze_documents.py
+│   ├── 04_create_chunks.py
+│   ├── 05_create_embeddings.py
+│   └── 06_setup_vector_db.py
+├── vector_db/                  # Pre-built FAISS index
+├── pyproject.toml
+└── README.md
 ```
-
-## Requirements
-
-- Python 3.8+
-- SEC API key (from [sec-api.io](https://sec-api.io))
-- Google Cloud account with Vertex AI enabled
-- Valid email for SEC request headers
-
-## Key Dependencies
-
-- `google-cloud-aiplatform` - Vertex AI for embeddings and Gemini
-- `faiss-cpu` - Vector similarity search
-- `sec-api` - SEC filing access
-- `beautifulsoup4` - HTML parsing
-- `spacy` - Text processing
-- `tiktoken` - Token counting
-- `yfinance` - Market data
-- `pandas` - Data manipulation
-
-See `requirements.txt` for complete list.
 
 ## License
 
-MIT License
+MIT
