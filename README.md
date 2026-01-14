@@ -102,9 +102,6 @@ cd FinancialAgent
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[pipeline]"
-
-# Download spaCy model
-python -m spacy download en_core_web_sm
 ```
 
 ## Environment Variables

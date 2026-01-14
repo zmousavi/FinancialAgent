@@ -22,7 +22,6 @@ dev = ["pytest"]
 pipeline = [
     "sec-api",
     "beautifulsoup4",
-    "spacy",
     "tiktoken",
     "yfinance",
     "pandas",
